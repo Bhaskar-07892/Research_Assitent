@@ -21,8 +21,7 @@ def child_docs_spliter (parent_docs) :
 
             child_docs.extend(childern)
 
-        for child in child_docs:
-            print(child.metadata["doc_id"])
+    
             
         logging.info("Child chunking successfully ...")
 
