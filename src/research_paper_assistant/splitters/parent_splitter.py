@@ -25,7 +25,7 @@ def parent_docs_splitter (docs) :
         # for doc in splited_docs:
         #     print(doc.metadata["doc_id"])
 
-        logging.info("Child chunking successfully ...")
+        logging.info("Parent chunking successfully ...")
         return splited_docs
 
     # Error Handling

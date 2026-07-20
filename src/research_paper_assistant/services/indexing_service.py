@@ -1,51 +1,92 @@
 from pathlib import Path
+import sys
+
 from research_paper_assistant.loaders.pdf_loader import loadpath_pdf
 from research_paper_assistant.splitters.parent_splitter import parent_docs_splitter
 from research_paper_assistant.splitters.child_splitter import child_docs_spliter
 from research_paper_assistant.docstore.parent_store import store_parent_docs
-from research_paper_assistant.embeddings.embedding_model import get_embedding_model , docs_converted_into_str
-from research_paper_assistant.vectorstores.chroma_db import vector
-
-# call all component in right order 
-def indexing_services_ (filename) : 
-
-
-    ROOT_DIR = Path(__file__).resolve().parent
-
-    #uploaded pdf path
-    pdf_path = ROOT_DIR / "data" / "uploads" / filename
-
-    # language object (document) loading 
-    loader = loadpath_pdf(str(pdf_path))
-    data = loader.load()
-    # print(data)
+from research_paper_assistant.embeddings.embedding_model import get_embedding_model
+from research_paper_assistant.vectorstores.chroma_db import get_vector
+from research_paper_assistant.utils.logger import logging
+from research_paper_assistant.utils.exception import CustomException
 
 
-    # parent spiliting
-    data_Loaded = parent_docs_splitter(data)
-    # print(data_Loaded[0:5])
-    # print(len(data_Loaded))
+def indexing_services(filename: str):
+    """
+    Index a PDF into the RAG pipeline.
 
+    Pipeline:
+    1. Load PDF
+    2. Split into Parent Chunks
+    3. Split into Child Chunks
+    4. Store Parent Documents
+    5. Create Embeddings
+    6. Store Child Embeddings in ChromaDB
+    """
 
-    # child spliting
-    data_Loaded1 = child_docs_spliter(data_Loaded)
-    # print(data_Loaded1[0])
-    # print(len(data_Loaded1))
+    try:
+        logging.info("========== Indexing Started ==========")
 
+        # Project Root
+        root_dir = Path(__file__).resolve().parent.parent.parent.parent
 
-    # store parent document in ram
-    d = store_parent_docs(data_Loaded)
+        pdf_path = root_dir / "data" / "uploads" / filename
 
+        if not pdf_path.exists():
+            raise FileNotFoundError(f"PDF not found: {pdf_path}")
 
-    # convert document to str for creating embedding 
-    str_text = docs_converted_into_str(data_Loaded1)
-    # print(str_text)
+        logging.info(f"Loading PDF: {filename}")
 
+        # Load PDF
+        loader = loadpath_pdf(str(pdf_path))
+        documents = loader.load()
 
-    # initilise embedding model 
-    embedd_model= get_embedding_model()
+        logging.info(f"Loaded {len(documents)} document(s).")
 
+        # Parent Split
+        parent_docs = parent_docs_splitter(documents)
 
-    # store embedding vector into database
-    embedd_text = vector(chunk_document=data_Loaded1 , embedding_model=embedd_model , persist_dir="data/chroma_db")
-    # print (embedd_text)
+        logging.info(
+            f"Created {len(parent_docs)} parent chunks."
+        )
+
+        # Child Split
+        child_docs = child_docs_spliter(parent_docs)
+
+        logging.info(
+            f"Created {len(child_docs)} child chunks."
+        )
+
+        # Store Parent Documents
+        store_parent_docs(parent_docs)
+
+        logging.info("Parent documents stored successfully.")
+
+        # Embedding Model
+        embedding_model = get_embedding_model()
+
+        logging.info("Embedding model loaded successfully.")
+
+        # Store Child Embeddings
+        get_vector(
+            chunk_document=child_docs,
+            embedding_model=embedding_model,
+            persist_dir="data/chroma_db"
+        )
+
+        logging.info("Child embeddings stored successfully.")
+
+        logging.info("========== Indexing Completed ==========")
+
+        return {
+                "status": "success",
+                "filename": filename,
+                "parent_chunks": len(parent_docs),
+                "child_chunks": len(child_docs),
+                }
+
+    except Exception as e:
+
+        logging.exception("Indexing Service Failed.")
+
+        raise CustomException(e, sys)

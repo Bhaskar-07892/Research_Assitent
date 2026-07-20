@@ -1,6 +1,6 @@
-from langchain_core.stores import InMemoryStore
+from research_paper_assistant.docstore.sqlite_store import SQLiteDocStore
 
-docstore = InMemoryStore()
+docstore = SQLiteDocStore()
 
 
 def store_parent_docs(parent_docs):
@@ -9,21 +9,15 @@ def store_parent_docs(parent_docs):
 
     for doc in parent_docs:
 
-        
-
-        pair = (
-            doc.metadata["doc_id"],
-            doc
+        pairs.append(
+            (
+                doc.metadata["doc_id"],
+                doc
+            )
         )
 
-        pairs.append(pair)
-        
     docstore.mset(pairs)
 
 
 def get_parent_doc(doc_id):
-
-
-    parent = docstore.mget([doc_id])
-
-    return parent[0]
+    return docstore.mget([doc_id])[0]

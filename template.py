@@ -18,6 +18,7 @@ folders = [
     "src/research_paper_assistant/services",
     "src/research_paper_assistant/utils",
     "src/research_paper_assistant/config",
+    "src/research_paper_assistant/llms",
 ]
 
 files = [
@@ -74,6 +75,8 @@ files = [
     "src/research_paper_assistant/services/indexing_service.py",
     "src/research_paper_assistant/services/query_service.py",
     "src/research_paper_assistant/services/pdf_service.py",
+    "src/research_paper_assistant/llms/__init__.py",
+    "src/research_paper_assistant/llms/llm_model.py",
 
     # Utils
     "src/research_paper_assistant/utils/__init__.py",
