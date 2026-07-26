@@ -11,15 +11,17 @@ load_dotenv()
 
 def get_llm():
     try:
+        token = os.getenv("HUGGINGFACEHUB_API_TOKEN") or os.getenv("HF_TOKEN")
+        llm_kwargs = {
+            "repo_id": "meta-llama/Llama-3.1-8B",
+            'provider':"featherless-ai",
+            "max_new_tokens": 200,
+            "temperature": 0.7,
+        }
+        if token:
+            llm_kwargs["huggingfacehub_api_token"] = token
 
-        llm = HuggingFaceEndpoint(
-            repo_id=os.getenv("HF_LLM_MODEL"),
-            provider=os.getenv("HF_LLM_PROVIDER"),
-            huggingfacehub_api_token=os.getenv("HUGGINGFACEHUB_API_TOKEN"),
-            temperature=0,
-            max_new_tokens=512,
-        )
-
+        llm = HuggingFaceEndpoint(**llm_kwargs)
         return llm
 
     except Exception as e:

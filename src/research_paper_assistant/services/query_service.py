@@ -36,7 +36,6 @@ def query_services(user_query: str):
         )
 
         # Load LLM
-        llm = None
         try:
             llm = get_llm()
 
